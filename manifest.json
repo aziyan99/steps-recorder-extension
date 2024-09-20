@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
   "version": "0.0.1",
+  "author": "Your Name",
   "name": "steps-recorder-extension",
   "description": "An Extension.js example.",
   "icons": {
@@ -9,28 +10,32 @@
     "48": "images/extension_48.png",
     "128": "images/extension_128.png"
   },
-  "permissions": [
-    "activeTab",
-    "scripting"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "chromium:side_panel": {
+    "default_path": "sidebar/index.html",
+    "default_title": "Steps recorder",
+    "default_icon": "images/extension_48.png"
+  },
+  "firefox:sidebar_action": {
+    "default_panel": "sidebar/index.html",
+    "default_title": "Steps recorder",
+    "default_icon": "images/extension_48.png"
+  },
+  "permissions": ["tabs", "activeTab", "scripting", "sidePanel", "idle"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "chromium:service_worker": "background.js",
-    "firefox:scripts": [
-      "background.js"
-    ]
+    "firefox:scripts": ["background.js"]
   },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content/scripts.js"
-      ]
+      "matches": ["<all_urls>"],
+      "js": ["content/scripts.js"]
     }
   ],
-  "author": "Your Name"
+  "web_accessible_resources": [
+    {
+      "matches": ["<all_urls>"],
+      "resources": ["content/scripts.js"]
+    }
+  ]
 }

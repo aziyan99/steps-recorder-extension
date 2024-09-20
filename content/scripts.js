@@ -1,6 +1,23 @@
-import './styles.css'
-import {getContentHtml} from './content'
+/**
+ * @function clickEventFired
+ * @param {PointerEvent} event
+ */
+const clickEventFired = (event) => {
+  chrome.runtime.sendMessage({
+    type: 'CAPTURED',
+    data: { cursorX: event.clientX, cursorY: event.clientY },
+  });
+};
 
-console.log('hello from content_scripts')
+chrome.runtime.onMessage.addListener((message, sender, callback) => {
+  if (message.type === 'START-CAPTURE') {
+    document.removeEventListener('click', clickEventFired);
+    document.addEventListener('click', clickEventFired);
+  }
 
-document.body.innerHTML += `<div id="extension-root">${getContentHtml()}</div>`
+  if (message.type === 'STOP-CAPTURE') {
+    document.removeEventListener('click', clickEventFired);
+  }
+});
+
+// FIX: Listener is removed when the page is reload/or refresh
