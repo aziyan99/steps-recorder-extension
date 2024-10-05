@@ -1,35 +1,13 @@
 # steps-recorder-extension
 
-> An Extension.js example.
+> An steps recorder
 
-## Available Scripts
+## Note
 
-In the project directory, you can run the following scripts:
+To built the extension for production we need to run the `npm run dev` command before running the `build` command. Otherwise the built we outputing an error `Could not load CSS `content_scripts/content-0.css`.
 
-### npm dev
-
-**Development Mode**: This command runs your extension in development mode. It will launch a new browser instance with your extension loaded. The page will automatically reload whenever you make changes to your code, allowing for a smooth development experience.
-
-```bash
-npm dev
 ```
-
-### npm start
-
-**Production Preview**: This command runs your extension in production mode. It will launch a new browser instance with your extension loaded, simulating the environment and behavior of your extension as it will appear once published.
-
-```bash
-npm start
+npm run dev
+npm run build
+npm run start
 ```
-
-### npm build
-
-**Build for Production**: This command builds your extension for production. It optimizes and bundles your extension, preparing it for deployment to the target browser's store.
-
-```bash
-npm build
-```
-
-## Learn More
-
-To learn more about creating cross-browser extensions with Extension.js, visit the [official documentation](https://extension.js.org).
