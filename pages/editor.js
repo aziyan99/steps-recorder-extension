@@ -80,7 +80,7 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
   stepImage.appendChild(canvas);
 
   const step = document.createElement('div');
-  step.classList.add('step');
+  step.classList.add('step', 'pagebreak');
   step.appendChild(stepHeader);
   step.appendChild(stepImage);
 

@@ -25,3 +25,13 @@
     @apply flex w-full justify-center;
   }
 }
+
+@media print {
+    .pagebreak { 
+      page-break-before: always; 
+    }
+    
+    .pagebreak:first-child { 
+      page-break-before: unset; 
+    }
+}
