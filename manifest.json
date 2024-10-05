@@ -20,7 +20,7 @@
     "default_title": "Steps recorder",
     "default_icon": "images/extension_48.png"
   },
-  "permissions": ["tabs", "activeTab", "scripting", "sidePanel", "idle"],
+  "permissions": ["tabs", "activeTab", "scripting", "sidePanel", "idle", "contextMenus"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "chromium:service_worker": "background.js",

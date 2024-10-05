@@ -19,5 +19,3 @@ chrome.runtime.onMessage.addListener((message, sender, callback) => {
     document.removeEventListener('click', clickEventFired);
   }
 });
-
-// FIX: Listener is removed when the page is reload/or refresh

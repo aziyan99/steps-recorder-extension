@@ -1,4 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .step {
+    @apply w-[720px] bg-white rounded-lg p-6 shadow-sm flex flex-col gap-y-2;
+  }
+
+  .step-header {
+    @apply flex gap-x-4 items-start;
+  }
+
+  .step-header-index {
+    @apply rounded-full bg-neutral-200 size-6 inline-flex justify-center items-center p-5 font-medium bg-opacity-50;
+  }
+
+  .step-header-title {
+    @apply font-medium w-full border border-neutral-200 px-2 py-2 focus:outline-neutral-400 rounded-lg print:outline-none print:border-none;
+  }
+
+  .step-image {
+    @apply flex w-full justify-center;
+  }
+}

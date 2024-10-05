@@ -1,5 +1,7 @@
 import './styles.css';
 
+const DEBUG = false;
+
 /**@type {boolean} */
 let isCaptureRunning = false;
 
@@ -94,7 +96,7 @@ stopCaptureButton.addEventListener('click', function () {
 
   stepsRegion.classList.replace('flex', 'hidden');
 
-  chrome.runtime.sendMessage({ type: 'STOP-CAPTURE' });
+  chrome.runtime.sendMessage({ type: 'STOP-CAPTURE', data: steps });
 });
 
 chrome.runtime.onMessage.addListener(async (message, sender, callback) => {
@@ -107,7 +109,9 @@ chrome.runtime.onMessage.addListener(async (message, sender, callback) => {
       cursorY: message.data.cursorY,
     });
 
-    console.log(steps);
+    if (DEBUG) {
+      console.log('sidebar: ', `steps: ${steps}`);
+    }
 
     stepsRegion.innerHTML = '';
     steps.forEach((step) => {
