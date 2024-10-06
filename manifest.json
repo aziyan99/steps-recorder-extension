@@ -2,9 +2,9 @@
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
   "version": "0.0.1",
-  "author": "Your Name",
-  "name": "steps-recorder-extension",
-  "description": "An Extension.js example.",
+  "author": "rajaazian",
+  "name": "Steps Recorder",
+  "description": "Record steps made easy",
   "icons": {
     "16": "images/extension_16.png",
     "48": "images/extension_48.png",
