@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
-  "version": "0.0.1",
+  "version": "1.0.1",
   "author": "rajaazian",
   "name": "Steps Recorder",
   "description": "Record steps made easy",
@@ -20,7 +20,7 @@
     "default_title": "Steps recorder",
     "default_icon": "images/extension_48.png"
   },
-  "permissions": ["tabs", "activeTab", "scripting", "sidePanel", "idle", "contextMenus"],
+  "permissions": ["activeTab", "sidePanel"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "chromium:service_worker": "background.js",
