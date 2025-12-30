@@ -5,12 +5,12 @@ const DEBUG = false;
 
 /**
  * @ function stepWithCanvasTemplate
- * 
- * @param {number} index 
- * @param {number} cursorX 
- * @param {number} cursorY 
- * @param {string} base64Image 
- * 
+ *
+ * @param {number} index
+ * @param {number} cursorX
+ * @param {number} cursorY
+ * @param {string} base64Image
+ *
  * @returns {HTMLElement}
  */
 const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
@@ -97,4 +97,12 @@ chrome.runtime.onMessage.addListener((message, sender, callback) => {
     });
   }
 });
+
+const printBtn = document.getElementById('btn-print');
+if (printBtn) {
+  printBtn.addEventListener('click', () => {
+    window.print();
+  });
+}
+
 
