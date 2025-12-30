@@ -308,9 +308,7 @@ const createTextStepTemplate = (index) => {
   stepIndex.style.flexShrink = '0'; // Ensure it doesn't shrink
 
   const textInput = document.createElement('textarea');
-  // Match exact classes from stepWithCanvasTemplate
   textInput.className = 'step-header-title w-full resize-none outline-none bg-transparent text-lg font-medium';
-  textInput.placeholder = "Type your instruction here...";
   textInput.rows = 1;
   textInput.style.overflow = 'hidden';
   textInput.addEventListener('input', function() {
