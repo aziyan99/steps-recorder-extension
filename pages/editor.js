@@ -151,10 +151,10 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
 
   // 2. Zoom Controls
   const zoomControls = document.createElement('div');
-  zoomControls.className = 'absolute bottom-4 right-4 flex flex-col bg-slate-800 text-white rounded-lg shadow-lg overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100';
+  zoomControls.className = 'absolute bottom-4 right-4 flex flex-col bg-slate-800/90 text-white rounded-lg shadow-lg overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100';
 
   const zoomInBtn = document.createElement('button');
-  zoomInBtn.className = 'p-2 hover:bg-slate-700 active:bg-slate-600 transition-colors border-b border-gray-600';
+  zoomInBtn.className = 'p-2 hover:bg-slate-700 active:bg-slate-600 transition-colors';
   zoomInBtn.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
       <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
