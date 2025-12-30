@@ -45,13 +45,25 @@
     .pagebreak {
       page-break-before: auto;
       break-before: auto;
+      page-break-after: auto;
+      break-after: auto;
     }
 
     .step-wrapper {
         break-inside: avoid;
         page-break-inside: avoid;
-        margin-bottom: 2rem;
+        margin-bottom: 0.5rem !important;
         width: 100% !important;
+        display: block !important;
+    }
+
+    .step-wrapper:first-child {
+        break-before: auto;
+        margin-top: 0 !important;
+    }
+
+    [data-region="steps"] {
+        display: block !important;
     }
 
     .step, .step-text-only {
