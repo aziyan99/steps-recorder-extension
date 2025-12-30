@@ -3,16 +3,16 @@ import "./editor.css";
 /**@type {boolean} */
 const DEBUG = false;
 
-/**
- * @function stepWithCanvasTemplate
- *
- * @param {number} index - The index of the step
- * @param {number} cursorX - The X coordinate of the cursor interaction
- * @param {number} cursorY - The Y coordinate of the cursor interaction
- * @param {string} base64Image - The screenshot as a base64 string
- *
- * @returns {HTMLElement} The constructed DOM element for the step
- */
+const updateStepIndices = () => {
+  const steps = document.querySelectorAll('.step-wrapper');
+  steps.forEach((step, index) => {
+    const indexEl = step.querySelector('.step-header-index');
+    if (indexEl) {
+      indexEl.innerText = `${index + 1}`;
+    }
+  });
+};
+
 const updateStepControls = () => {
   const steps = document.querySelectorAll('.step-wrapper');
   steps.forEach((step, index) => {
@@ -215,6 +215,7 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
     if (confirm('Are you sure you want to delete this step?')) {
       stepWrapper.remove();
       updateStepControls();
+      updateStepIndices();
     }
   });
 
@@ -229,9 +230,12 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
   stepImage.appendChild(dragLabel);
   stepImage.appendChild(zoomControls);
 
+  const stepHeaderIndex = document.createElement('div');
+  stepHeaderIndex.classList.add('step-header-index');
+  stepHeaderIndex.innerText = `${index + 1}`;
+
   const stepHeaderTitle = document.createElement('textarea');
   stepHeaderTitle.classList.add('step-header-title', 'w-full', 'resize-none', 'outline-none', 'bg-transparent', 'text-lg', 'font-medium');
-  stepHeaderTitle.placeholder = "Type a title for this step...";
 
   stepHeaderTitle.value = "";
   stepHeaderTitle.style.overflow = 'hidden';
@@ -244,6 +248,7 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
 
   const stepHeader = document.createElement('div');
   stepHeader.classList.add('step-header', 'mb-4', 'flex', 'items-start', 'gap-4');
+  stepHeader.appendChild(stepHeaderIndex);
   stepHeader.appendChild(stepHeaderTitle);
 
   const moveControls = document.createElement('div');
@@ -259,6 +264,7 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
     if (stepsRegion && wrapper.previousElementSibling) {
       stepsRegion.insertBefore(wrapper, wrapper.previousElementSibling);
       updateStepControls();
+      updateStepIndices();
     }
   });
 
@@ -272,6 +278,7 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
     if (stepsRegion && wrapper.nextElementSibling) {
       stepsRegion.insertBefore(wrapper, wrapper.nextElementSibling.nextSibling);
       updateStepControls();
+      updateStepIndices();
     }
   });
 
@@ -280,7 +287,7 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
 
   // -- Content Wrapper --
   const contentWrapper = document.createElement('div');
-  contentWrapper.classList.add('step', 'flex-grow', 'flex', 'flex-col', 'bg-white', 'rounded-lg', 'p-6', 'shadow-sm', 'gap-y-2'); // Re-applying .step styles here
+  contentWrapper.classList.add('step', 'flex-grow', 'flex', 'flex-col', 'bg-white', 'rounded-lg', 'p-6', 'shadow-sm', 'gap-y-2');
   contentWrapper.appendChild(stepHeader);
   contentWrapper.appendChild(stepImage);
 
@@ -293,6 +300,109 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
 
   return stepWrapper;
 };
+
+const createTextStepTemplate = (index) => {
+  const stepIndex = document.createElement('div');
+  stepIndex.className = 'step-header-index';
+  stepIndex.innerText = `${index + 1}`;
+  stepIndex.style.flexShrink = '0'; // Ensure it doesn't shrink
+
+  const textInput = document.createElement('textarea');
+  // Match exact classes from stepWithCanvasTemplate
+  textInput.className = 'step-header-title w-full resize-none outline-none bg-transparent text-lg font-medium';
+  textInput.placeholder = "Type your instruction here...";
+  textInput.rows = 1;
+  textInput.style.overflow = 'hidden';
+  textInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = this.scrollHeight + 'px';
+  });
+
+  // Delete Button
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'p-2 hover:bg-sky-100 hover:text-red-600 rounded-full transition-colors text-slate-400 ml-auto flex-shrink-0 d-print-none';
+  deleteBtn.title = "Delete Step";
+  deleteBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+    </svg>
+  `;
+
+  // Create wrapper first so delete btn has reference
+  const stepWrapper = document.createElement('div');
+  stepWrapper.className = 'step-wrapper pagebreak flex flex-row gap-2 items-start';
+
+  deleteBtn.addEventListener('click', () => {
+    if (confirm('Delete this text step?')) {
+      stepWrapper.remove();
+      updateStepControls();
+      updateStepIndices();
+    }
+  });
+
+  const contentWrapper = document.createElement('div');
+  contentWrapper.className = 'step-text-only';
+  contentWrapper.appendChild(stepIndex);
+  contentWrapper.appendChild(textInput);
+  contentWrapper.appendChild(deleteBtn);
+
+  // Move Controls (Up/Down)
+  const moveControls = document.createElement('div');
+  moveControls.className = 'move-controls p-2 flex flex-col items-center justify-start gap-2 text-neutral-400 print:hidden';
+
+  const btnUp = document.createElement('button');
+  btnUp.className = 'btn-move-up p-1 hover:text-neutral-600 hover:bg-neutral-100 rounded transition-colors';
+  btnUp.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd" /></svg>`;
+  btnUp.addEventListener('click', () => {
+    const stepsRegion = stepWrapper.parentNode;
+    if (stepsRegion && stepWrapper.previousElementSibling) {
+      stepsRegion.insertBefore(stepWrapper, stepWrapper.previousElementSibling);
+      updateStepControls();
+      updateStepIndices();
+    }
+  });
+
+  const btnDown = document.createElement('button');
+  btnDown.className = 'btn-move-down p-1 hover:text-neutral-600 hover:bg-neutral-100 rounded transition-colors';
+  btnDown.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clip-rule="evenodd" /></svg>`;
+  btnDown.addEventListener('click', () => {
+    const stepsRegion = stepWrapper.parentNode;
+    if (stepsRegion && stepWrapper.nextElementSibling) {
+      stepsRegion.insertBefore(stepWrapper, stepWrapper.nextElementSibling.nextSibling);
+      updateStepControls();
+      updateStepIndices();
+    }
+  });
+
+  moveControls.appendChild(btnUp);
+  moveControls.appendChild(btnDown);
+
+  stepWrapper.appendChild(moveControls);
+  stepWrapper.appendChild(contentWrapper);
+
+  return stepWrapper;
+};
+
+const addTextBtn = document.getElementById('btn-add-text');
+if (addTextBtn) {
+  addTextBtn.addEventListener('click', () => {
+    const stepsRegion = document.querySelector('[data-region="steps"]');
+    // Calculate new index based on current count
+    const newIndex = stepsRegion.children.length;
+    const textStep = createTextStepTemplate(newIndex);
+    stepsRegion.appendChild(textStep);
+
+    // Scroll to new step
+    textStep.scrollIntoView({ behavior: 'smooth' });
+
+    // Focus the textarea
+    const textarea = textStep.querySelector('textarea');
+    if (textarea) textarea.focus();
+
+    updateStepControls();
+    updateStepIndices();
+  });
+}
 
 chrome.runtime.onMessage.addListener((message, sender, callback) => {
   if (message.type === "EDITOR-RENDERED") {

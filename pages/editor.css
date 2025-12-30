@@ -24,14 +24,53 @@
   .step-image {
     @apply flex w-full justify-center;
   }
+
+  .step-text-only {
+    @apply w-[720px] bg-white rounded-lg p-6 shadow-sm flex flex-row gap-x-4 items-center border border-sky-100;
+  }
+
+
 }
 
 @media print {
-    .pagebreak { 
-      page-break-before: always; 
+    @page {
+        margin: 1cm;
+        size: auto;
     }
-    
-    .pagebreak:first-child { 
-      page-break-before: unset; 
+
+    body {
+        background: white;
+    }
+
+    .pagebreak {
+      page-break-before: auto;
+      break-before: auto;
+    }
+
+    .step-wrapper {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 2rem;
+        width: 100% !important;
+    }
+
+    .step, .step-text-only {
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 1.5rem !important;
+        border-radius: 0.5rem !important;
+    }
+
+    .move-controls,
+    .drag-handle,
+    #btn-print,
+    .step-image > div:not(canvas) {
+        display: none !important;
+    }
+
+    .d-print-none, .d-print-none *
+    {
+        display: none !important;
     }
 }
