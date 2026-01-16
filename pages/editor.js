@@ -1,4 +1,5 @@
 import "./editor.css";
+import { openImageModal } from "./editor-modal.js";
 
 /**@type {boolean} */
 const DEBUG = false;
@@ -31,10 +32,11 @@ const updateStepControls = () => {
  * @param {number} cursorX - The X coordinate of the cursor interaction
  * @param {number} cursorY - The Y coordinate of the cursor interaction
  * @param {string} base64Image - The screenshot as a base64 string
+ * @param {number} devicePixelRatio - The pixel ratio of the captured device
  *
  * @returns {HTMLElement} The constructed DOM element for the step
  */
-const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
+const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image, devicePixelRatio = 1) => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
@@ -67,8 +69,11 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
 
     ctx.drawImage(image, 0, 0);
 
+    const scaledX = cursorX * devicePixelRatio;
+    const scaledY = cursorY * devicePixelRatio;
+
     ctx.beginPath();
-    ctx.arc(cursorX, cursorY, 22, 0, 2 * Math.PI);
+    ctx.arc(scaledX, scaledY, 22, 0, 2 * Math.PI);
     ctx.fillStyle = 'rgba(251, 146, 60, 0.3)';
     ctx.fill();
 
@@ -80,8 +85,12 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
   };
 
   image.onload = () => {
-    let idealPanX = (canvasWidth / 2) - cursorX;
-    let idealPanY = (canvasHeight / 2) - cursorY;
+    // Scale the CSS coordinates to image physical pixels
+    const scaledX = cursorX * devicePixelRatio;
+    const scaledY = cursorY * devicePixelRatio;
+
+    let idealPanX = (canvasWidth / 2) - scaledX;
+    let idealPanY = (canvasHeight / 2) - scaledY;
 
     const minPanX = canvasWidth - image.width;
     const minPanY = canvasHeight - image.height;
@@ -149,7 +158,7 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
     <span>Drag to Pan</span>
   `;
 
-  // 2. Zoom Controls
+  // Zoom Controls
   const zoomControls = document.createElement('div');
   zoomControls.className = 'absolute bottom-4 right-4 flex flex-col bg-slate-800/90 text-white rounded-lg shadow-lg overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100';
 
@@ -202,24 +211,22 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
     draw();
   });
 
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'p-2 hover:bg-red-600 hover:text-white active:bg-red-700 transition-colors text-red-500';
-  deleteBtn.title = "Delete Step";
-  deleteBtn.innerHTML = `
+  const viewBtn = document.createElement('button');
+  viewBtn.className = 'p-2 hover:bg-slate-700 active:bg-slate-600 transition-colors';
+  viewBtn.title = "View Full Image";
+  viewBtn.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-      <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9M20.25 20.25v-4.5m0 4.5h-4.5m4.5 0L15 15" />
     </svg>
   `;
-  deleteBtn.addEventListener('click', (e) => {
+  viewBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this step?')) {
-      stepWrapper.remove();
-      updateStepControls();
-      updateStepIndices();
-    }
+    openImageModal(base64Image, cursorX, cursorY, devicePixelRatio, (newX, newY) => {
+        updateStepCoordinates(index, newX, newY);
+    });
   });
 
-  zoomControls.appendChild(deleteBtn);
+  zoomControls.appendChild(viewBtn);
 
   zoomControls.appendChild(zoomInBtn);
   zoomControls.appendChild(zoomOutBtn);
@@ -284,6 +291,24 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image) => {
 
   moveControls.appendChild(btnUp);
   moveControls.appendChild(btnDown);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'p-1 hover:bg-neutral-100 hover:text-red-600 rounded transition-colors text-neutral-400 mt-2';
+  deleteBtn.title = "Delete Step";
+  deleteBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+    </svg>
+  `;
+  deleteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (confirm('Are you sure you want to delete this step?')) {
+      stepWrapper.remove();
+      updateStepControls();
+      updateStepIndices();
+    }
+  });
+  moveControls.appendChild(deleteBtn);
 
   // -- Content Wrapper --
   const contentWrapper = document.createElement('div');
@@ -402,17 +427,39 @@ if (addTextBtn) {
   });
 }
 
+
+let currentSteps = [];
+
 chrome.runtime.onMessage.addListener((message, sender, callback) => {
   if (message.type === "EDITOR-RENDERED") {
-    const stepsRegion = document.querySelector('[data-region="steps"]');
-    stepsRegion.innerHTML = '';
-    message.data.forEach((step, index) => {
-      const stepElement = stepWithCanvasTemplate(index, step.cursorX, step.cursorY, step.base64Image);
-      stepsRegion.appendChild(stepElement);
-    });
-    updateStepControls(); // Update buttons visibility after rendering
+    currentSteps = message.data;
+    renderSteps();
   }
 });
+
+const renderSteps = () => {
+    const stepsRegion = document.querySelector('[data-region="steps"]');
+    stepsRegion.innerHTML = '';
+    currentSteps.forEach((step, index) => {
+      const stepElement = stepWithCanvasTemplate(
+        index,
+        step.cursorX,
+        step.cursorY,
+        step.base64Image,
+        step.devicePixelRatio
+      );
+      stepsRegion.appendChild(stepElement);
+    });
+    updateStepControls();
+};
+
+const updateStepCoordinates = (index, newX, newY) => {
+    if (currentSteps[index]) {
+        currentSteps[index].cursorX = newX;
+        currentSteps[index].cursorY = newY;
+        renderSteps();
+    }
+};
 
 const printBtn = document.getElementById('btn-print');
 if (printBtn) {

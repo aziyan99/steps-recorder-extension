@@ -23,12 +23,13 @@ const stepsRegion = document.querySelector('div[data-region="steps"]');
  * @property {string} base64Image
  * @property {number} cursorX
  * @property {number} cursorY
+ * @property {number} devicePixelRatio
  */
 
 /**@type {Step[]} */
 let steps = [];
 
-const stepWithCanvasTemplate = (cursorX, cursorY, base64Image) => {
+const stepWithCanvasTemplate = (cursorX, cursorY, base64Image, devicePixelRatio = 1) => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
@@ -37,20 +38,18 @@ const stepWithCanvasTemplate = (cursorX, cursorY, base64Image) => {
     const width = 320;
     const height = 200;
 
-    // Set the canvas size to the viewable area (600x400)
     ctx.canvas.width = width - 24;
     ctx.canvas.height = height - 24;
 
-    // Define the area to render (centered around cursorX, cursorY)
-    const dx = Math.max(0, cursorX - 150); // Adjust so (cursorX, cursorY) is near the center horizontally
-    const dy = Math.max(0, cursorY - 100); // Adjust to center vertically
+    const scaledX = cursorX * devicePixelRatio;
+    const scaledY = cursorY * devicePixelRatio;
 
-    // Draw the cropped image portion
+    const dx = Math.max(0, scaledX - 150);
+    const dy = Math.max(0, scaledY - 100);
+
     ctx.drawImage(image, dx, dy, width, height, 0, 0, width, height);
-
-    // Draw the circle at the given cursor coordinates, relative to the cropped area
-    const circleX = cursorX - dx;
-    const circleY = cursorY - dy;
+    const circleX = scaledX - dx;
+    const circleY = scaledY - dy;
     ctx.beginPath();
     ctx.arc(circleX, circleY, 22, 0, 2 * Math.PI);
     ctx.fillStyle = 'rgba(251, 146, 60, 0.3)';
@@ -107,6 +106,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, callback) => {
       base64Image: captureUrl,
       cursorX: message.data.cursorX,
       cursorY: message.data.cursorY,
+      devicePixelRatio: message.data.devicePixelRatio || 1,
     });
 
     if (DEBUG) {
@@ -116,7 +116,12 @@ chrome.runtime.onMessage.addListener(async (message, sender, callback) => {
     stepsRegion.innerHTML = '';
     steps.forEach((step) => {
       stepsRegion.appendChild(
-        stepWithCanvasTemplate(step.cursorX, step.cursorY, step.base64Image),
+        stepWithCanvasTemplate(
+          step.cursorX,
+          step.cursorY,
+          step.base64Image,
+          step.devicePixelRatio,
+        ),
       );
     });
   }

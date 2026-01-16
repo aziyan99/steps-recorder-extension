@@ -5,7 +5,11 @@
 const clickEventFired = (event) => {
   chrome.runtime.sendMessage({
     type: 'CAPTURED',
-    data: { cursorX: event.clientX, cursorY: event.clientY },
+    data: {
+      cursorX: event.clientX,
+      cursorY: event.clientY,
+      devicePixelRatio: window.devicePixelRatio,
+    },
   });
 };
 
