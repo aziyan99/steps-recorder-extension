@@ -34,9 +34,10 @@ const updateStepControls = () => {
  * @param {string} base64Image - The screenshot as a base64 string
  * @param {number} devicePixelRatio - The pixel ratio of the captured device
  *
+ * @param {Array} shapes - Array of annotation shapes
  * @returns {HTMLElement} The constructed DOM element for the step
  */
-const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image, devicePixelRatio = 1) => {
+const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image, devicePixelRatio = 1, shapes = []) => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
@@ -68,6 +69,44 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image, devicePixe
     ctx.scale(scale, scale);
 
     ctx.drawImage(image, 0, 0);
+
+    // Draw Shapes
+    shapes.forEach(shape => {
+        ctx.beginPath();
+        ctx.strokeStyle = shape.color || 'rgb(251, 146, 60)'; // Default orange
+        ctx.lineWidth = (shape.width || 4) * devicePixelRatio;
+
+        const sx = shape.x * devicePixelRatio;
+        const sy = shape.y * devicePixelRatio;
+        const ex = shape.endX * devicePixelRatio;
+        const ey = shape.endY * devicePixelRatio;
+
+        if (shape.type === 'line') {
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+        } else if (shape.type === 'rect') {
+            ctx.rect(sx, sy, ex - sx, ey - sy);
+            ctx.stroke();
+        } else if (shape.type === 'arrow') {
+            const headLength = 15 * devicePixelRatio; // length of head in pixels
+            const dx = ex - sx;
+            const dy = ey - sy;
+            const angle = Math.atan2(dy, dx);
+
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+
+            // Arrow head
+            ctx.beginPath();
+            ctx.moveTo(ex, ey);
+            ctx.lineTo(ex - headLength * Math.cos(angle - Math.PI / 6), ey - headLength * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(ex, ey);
+            ctx.lineTo(ex - headLength * Math.cos(angle + Math.PI / 6), ey - headLength * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        }
+    });
 
     const scaledX = cursorX * devicePixelRatio;
     const scaledY = cursorY * devicePixelRatio;
@@ -164,6 +203,7 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image, devicePixe
 
   const zoomInBtn = document.createElement('button');
   zoomInBtn.className = 'p-2 hover:bg-slate-700 active:bg-slate-600 transition-colors';
+  zoomInBtn.title = 'Zoom In';
   zoomInBtn.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
       <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -194,6 +234,7 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image, devicePixe
       <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />
     </svg>
   `;
+  zoomOutBtn.title = 'Zoom Out';
   zoomOutBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const factor = 1 / 1.2;
@@ -221,9 +262,18 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image, devicePixe
   `;
   viewBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    openImageModal(base64Image, cursorX, cursorY, devicePixelRatio, (newX, newY) => {
-        updateStepCoordinates(index, newX, newY);
-    });
+    const currentStep = currentSteps[index] || {};
+
+    openImageModal(
+        base64Image,
+        currentStep.cursorX,
+        currentStep.cursorY,
+        devicePixelRatio,
+        currentStep.shapes || [],
+        (updates) => {
+            updateStepData(index, updates);
+        }
+    );
   });
 
   zoomControls.appendChild(viewBtn);
@@ -446,17 +496,17 @@ const renderSteps = () => {
         step.cursorX,
         step.cursorY,
         step.base64Image,
-        step.devicePixelRatio
+        step.devicePixelRatio,
+        step.shapes || []
       );
       stepsRegion.appendChild(stepElement);
     });
     updateStepControls();
 };
 
-const updateStepCoordinates = (index, newX, newY) => {
+const updateStepData = (index, updates) => {
     if (currentSteps[index]) {
-        currentSteps[index].cursorX = newX;
-        currentSteps[index].cursorY = newY;
+        Object.assign(currentSteps[index], updates);
         renderSteps();
     }
 };

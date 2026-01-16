@@ -1,25 +1,38 @@
 /**
- * @function clickEventFired
- * @param {PointerEvent} event
+ * Content script setup
  */
-const clickEventFired = (event) => {
-  chrome.runtime.sendMessage({
-    type: 'CAPTURED',
-    data: {
-      cursorX: event.clientX,
-      cursorY: event.clientY,
-      devicePixelRatio: window.devicePixelRatio,
-    },
-  });
-};
+export default function main() {
+  /**
+   * @function clickEventFired
+   * @param {PointerEvent} event
+   */
+  const clickEventFired = (event) => {
+    chrome.runtime.sendMessage({
+      type: 'CAPTURED',
+      data: {
+        cursorX: event.clientX,
+        cursorY: event.clientY,
+        devicePixelRatio: window.devicePixelRatio,
+      },
+    });
+  };
 
-chrome.runtime.onMessage.addListener((message, sender, callback) => {
-  if (message.type === 'START-CAPTURE') {
-    document.removeEventListener('click', clickEventFired);
-    document.addEventListener('click', clickEventFired);
-  }
+  const messageListener = (message, sender, callback) => {
+    if (message.type === 'START-CAPTURE') {
+      document.removeEventListener('click', clickEventFired);
+      document.addEventListener('click', clickEventFired);
+    }
 
-  if (message.type === 'STOP-CAPTURE') {
+    if (message.type === 'STOP-CAPTURE') {
+      document.removeEventListener('click', clickEventFired);
+    }
+  };
+
+  chrome.runtime.onMessage.addListener(messageListener);
+
+  // Cleanup function
+  return () => {
+    chrome.runtime.onMessage.removeListener(messageListener);
     document.removeEventListener('click', clickEventFired);
-  }
-});
+  };
+}
