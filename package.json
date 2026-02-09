@@ -1,8 +1,8 @@
 {
   "private": true,
   "name": "steps-recorder-extension",
-  "description": "An Extension.js example.",
-  "version": "1.1.1",
+  "description": "An Steps Recorder Extension.js.",
+  "version": "1.2.1",
   "author": {
     "name": "rajaazian",
     "email": "rajaazian08@gmail.com",
