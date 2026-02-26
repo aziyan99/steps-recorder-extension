@@ -156,6 +156,13 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image, devicePixe
 
   // -- Event Listeners for Pan/Zoom --
 
+  canvas.__updateAndRedraw = (updates) => {
+    if (updates.shapes !== undefined) shapes = updates.shapes;
+    if (updates.cursorX !== undefined) cursorX = updates.cursorX;
+    if (updates.cursorY !== undefined) cursorY = updates.cursorY;
+    draw();
+  };
+
   canvas.addEventListener('mousedown', (e) => {
     isDragging = true;
     startDragX = e.clientX;
@@ -507,7 +514,10 @@ const renderSteps = () => {
 const updateStepData = (index, updates) => {
     if (currentSteps[index]) {
         Object.assign(currentSteps[index], updates);
-        renderSteps();
+        const canvas = document.querySelector(`canvas[data-id="${index}"]`);
+        if (canvas && canvas.__updateAndRedraw) {
+            canvas.__updateAndRedraw(updates);
+        }
     }
 };
 
