@@ -31,3 +31,4 @@ yarn-error.log*
 extension-env.d.ts
 AGENTS.md
 specs/
+.extension-js/
