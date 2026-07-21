@@ -18,7 +18,19 @@
   }
 
   .step-header-title {
-    @apply font-medium w-full border border-neutral-200 px-2 py-2 focus:outline-neutral-400 rounded-lg print:outline-none print:border-none;
+    @apply font-normal text-base text-neutral-800 w-full border border-neutral-200 px-3 py-2 focus:outline-none focus:border-neutral-400 rounded-lg bg-white print:hidden;
+  }
+
+  .step-header-title a,
+  .step-header-title-print a {
+    @apply text-sky-600 underline hover:text-sky-800;
+  }
+
+  [contenteditable="true"]:empty:before {
+    content: attr(placeholder);
+    color: #a3a3a3;
+    pointer-events: none;
+    display: block;
   }
 
   .step-image {

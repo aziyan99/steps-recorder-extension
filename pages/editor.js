@@ -319,34 +319,100 @@ const stepWithCanvasTemplate = (index, cursorX, cursorY, base64Image, devicePixe
   stepImage.appendChild(dragLabel);
   stepImage.appendChild(zoomControls);
 
+const createFormatToolbar = (editableEl, onUpdate) => {
+  const toolbar = document.createElement('div');
+  toolbar.className = 'flex items-center gap-1 bg-neutral-100/90 px-1.5 py-1 rounded-md border border-neutral-200 text-xs print:hidden self-start shadow-xs';
+
+  const createBtn = (htmlLabel, title, action) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'px-2 py-0.5 rounded hover:bg-neutral-200 text-neutral-700 font-semibold transition-colors focus:outline-none cursor-pointer';
+    btn.title = title;
+    btn.innerHTML = htmlLabel;
+    btn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      editableEl.focus();
+      action();
+      onUpdate();
+    });
+    return btn;
+  };
+
+  const boldBtn = createBtn('<b>B</b>', 'Bold (Ctrl+B)', () => document.execCommand('bold', false, null));
+  const italicBtn = createBtn('<i class="font-serif">I</i>', 'Italic (Ctrl+I)', () => document.execCommand('italic', false, null));
+  const underlineBtn = createBtn('<u>U</u>', 'Underline (Ctrl+U)', () => document.execCommand('underline', false, null));
+  const linkBtn = createBtn(`
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 inline">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+    </svg>
+  `, 'Add Link', () => {
+    let url = prompt('Enter link URL:', 'https://');
+    if (url) {
+      if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) {
+        url = 'https://' + url;
+      }
+      document.execCommand('createLink', false, url);
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        let node = sel.getRangeAt(0).commonAncestorContainer;
+        let anchor = node.nodeType === 1 ? node.closest('a') : node.parentElement?.closest('a');
+        if (anchor) {
+          anchor.setAttribute('target', '_blank');
+          anchor.setAttribute('rel', 'noopener noreferrer');
+        }
+      }
+    }
+  });
+
+  toolbar.appendChild(boldBtn);
+  toolbar.appendChild(italicBtn);
+  toolbar.appendChild(underlineBtn);
+  toolbar.appendChild(linkBtn);
+
+  return toolbar;
+};
+
   const stepHeaderIndex = document.createElement('div');
   stepHeaderIndex.classList.add('step-header-index');
   stepHeaderIndex.innerText = `${index + 1}`;
 
-  const stepHeaderTitle = document.createElement('textarea');
-  stepHeaderTitle.classList.add('step-header-title', 'w-full', 'resize-none', 'outline-none', 'bg-transparent', 'text-lg', 'font-medium', 'print:hidden');
-  stepHeaderTitle.value = currentSteps[index]?.instruction || "";
-  stepHeaderTitle.placeholder = "Add step description...";
-  stepHeaderTitle.style.overflow = 'hidden';
-  stepHeaderTitle.rows = 1;
+  const stepHeaderTitle = document.createElement('div');
+  stepHeaderTitle.contentEditable = 'true';
+  stepHeaderTitle.classList.add('step-header-title', 'w-full', 'outline-none', 'bg-white', 'border', 'border-neutral-200', 'focus:border-neutral-400', 'p-2.5', 'rounded-lg', 'text-base', 'font-normal', 'text-neutral-800', 'print:hidden', 'min-h-[42px]');
+  stepHeaderTitle.setAttribute('placeholder', 'Add step description...');
+  stepHeaderTitle.innerHTML = currentSteps[index]?.instruction || "";
 
   const stepHeaderTitlePrint = document.createElement('div');
-  stepHeaderTitlePrint.classList.add('step-header-title-print', 'hidden', 'print:block', 'w-full', 'text-lg', 'font-medium', 'text-neutral-800', 'whitespace-pre-wrap', 'break-words');
-  stepHeaderTitlePrint.textContent = currentSteps[index]?.instruction || "";
+  stepHeaderTitlePrint.classList.add('step-header-title-print', 'hidden', 'print:block', 'w-full', 'text-base', 'font-normal', 'text-neutral-800', 'whitespace-pre-wrap', 'break-words');
+  stepHeaderTitlePrint.innerHTML = currentSteps[index]?.instruction || "";
 
-  stepHeaderTitle.addEventListener('input', function () {
-    this.style.height = 'auto';
-    this.style.height = this.scrollHeight + 'px';
-    stepHeaderTitlePrint.textContent = this.value;
-    currentSteps[index].instruction = this.value;
+  const syncInstruction = () => {
+    const html = stepHeaderTitle.innerHTML;
+    currentSteps[index].instruction = html;
+    stepHeaderTitlePrint.innerHTML = html;
     saveCurrentGuide();
+  };
+
+  stepHeaderTitle.addEventListener('input', syncInstruction);
+  stepHeaderTitle.addEventListener('blur', () => {
+    if (stepHeaderTitle.innerText.trim() === '') {
+      stepHeaderTitle.innerHTML = '';
+      syncInstruction();
+    }
   });
+
+  const toolbar = createFormatToolbar(stepHeaderTitle, syncInstruction);
+
+  const titleContainer = document.createElement('div');
+  titleContainer.className = 'flex flex-col w-full gap-1.5';
+  titleContainer.appendChild(toolbar);
+  titleContainer.appendChild(stepHeaderTitle);
+  titleContainer.appendChild(stepHeaderTitlePrint);
 
   const stepHeader = document.createElement('div');
   stepHeader.classList.add('step-header', 'mb-4', 'flex', 'items-start', 'gap-4');
   stepHeader.appendChild(stepHeaderIndex);
-  stepHeader.appendChild(stepHeaderTitle);
-  stepHeader.appendChild(stepHeaderTitlePrint);
+  stepHeader.appendChild(titleContainer);
 
   const moveControls = document.createElement('div');
   moveControls.classList.add('move-controls', 'p-2', 'flex', 'flex-col', 'items-center', 'justify-start', 'gap-2', 'text-neutral-400', 'print:hidden');
@@ -419,24 +485,38 @@ const createTextStepTemplate = (index) => {
   stepIndex.innerText = `${index + 1}`;
   stepIndex.style.flexShrink = '0';
 
-  const textInput = document.createElement('textarea');
-  textInput.className = 'step-header-title w-full resize-none outline-none bg-transparent text-lg font-medium print:hidden';
-  textInput.rows = 1;
-  textInput.placeholder = "Add context instruction details...";
-  textInput.value = currentSteps[index]?.instruction || "";
-  textInput.style.overflow = 'hidden';
+  const textInput = document.createElement('div');
+  textInput.contentEditable = 'true';
+  textInput.className = 'step-header-title w-full outline-none bg-white border border-neutral-200 focus:border-neutral-400 p-2.5 rounded-lg text-base font-normal text-neutral-800 print:hidden min-h-[42px]';
+  textInput.setAttribute('placeholder', 'Add context instruction details...');
+  textInput.innerHTML = currentSteps[index]?.instruction || "";
 
   const textPrint = document.createElement('div');
-  textPrint.className = 'step-header-title-print hidden print:block w-full text-lg font-medium text-neutral-800 whitespace-pre-wrap break-words';
-  textPrint.textContent = currentSteps[index]?.instruction || "";
+  textPrint.className = 'step-header-title-print hidden print:block w-full text-base font-normal text-neutral-800 whitespace-pre-wrap break-words';
+  textPrint.innerHTML = currentSteps[index]?.instruction || "";
 
-  textInput.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = this.scrollHeight + 'px';
-    textPrint.textContent = this.value;
-    currentSteps[index].instruction = this.value;
+  const syncTextInstruction = () => {
+    const html = textInput.innerHTML;
+    currentSteps[index].instruction = html;
+    textPrint.innerHTML = html;
     saveCurrentGuide();
+  };
+
+  textInput.addEventListener('input', syncTextInstruction);
+  textInput.addEventListener('blur', () => {
+    if (textInput.innerText.trim() === '') {
+      textInput.innerHTML = '';
+      syncTextInstruction();
+    }
   });
+
+  const toolbar = createFormatToolbar(textInput, syncTextInstruction);
+
+  const textContainer = document.createElement('div');
+  textContainer.className = 'flex flex-col w-full gap-1.5';
+  textContainer.appendChild(toolbar);
+  textContainer.appendChild(textInput);
+  textContainer.appendChild(textPrint);
 
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'p-2 hover:bg-neutral-100 hover:text-red-600 rounded-full transition-colors text-slate-400 ml-auto flex-shrink-0 print:hidden';
@@ -459,10 +539,9 @@ const createTextStepTemplate = (index) => {
   });
 
   const contentWrapper = document.createElement('div');
-  contentWrapper.className = 'step-text-only';
+  contentWrapper.className = 'step-text-only flex-grow flex flex-col gap-y-2';
   contentWrapper.appendChild(stepIndex);
-  contentWrapper.appendChild(textInput);
-  contentWrapper.appendChild(textPrint);
+  contentWrapper.appendChild(textContainer);
   contentWrapper.appendChild(deleteBtn);
 
   const moveControls = document.createElement('div');
@@ -520,8 +599,8 @@ if (addTextBtn) {
     if (steps.length > 0) {
       const lastStep = steps[steps.length - 1];
       lastStep.scrollIntoView({ behavior: 'smooth' });
-      const textarea = lastStep.querySelector('textarea');
-      if (textarea) textarea.focus();
+      const inputEl = lastStep.querySelector('.step-header-title');
+      if (inputEl) inputEl.focus();
     }
   });
 }
@@ -576,13 +655,6 @@ const renderSteps = () => {
     });
     updateStepControls();
     updateStepIndices();
-
-    requestAnimationFrame(() => {
-      document.querySelectorAll('.step-header-title').forEach(textarea => {
-        textarea.style.height = 'auto';
-        textarea.style.height = textarea.scrollHeight + 'px';
-      });
-    });
 };
 
 const updateStepData = (index, updates) => {
